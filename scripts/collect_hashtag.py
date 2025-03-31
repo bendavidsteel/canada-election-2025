@@ -39,10 +39,9 @@ class ApiWrapper:
         await self.api.__aexit__(exc_type, exc, tb)
 
 async def main():
-    hashtags = ['romania', 'bucharest', 'georgescu', 'lasconi', 'bucuresti', 'iohannis', 'hurezeanu', 'sosoaca', 'ciolacu',\
-                'alegeriprezidențiale2025', 'alegeriprezidențiale2024', 'elenalasconi', 'diaconescu', 'dandiaconescu', 'mariustuca',\
-                'alegeriprezidențiale', 'alegeri', 'stiri', 'alegeri2025', 'romaniaelection', 'călingeorgescu'
-        ]
+    hashtags = [
+        'canadaelection', '51ststate', 'canadapoli', 'canadianpolitics', 'cdnpoli', 'markcarney', 'pierrepoilievre', 'poilievre', 'jagmeetsingh', 'carney', 'elbowsup'
+    ]
     hashtags.reverse()
 
     async with ApiWrapper('pytok') as api:
