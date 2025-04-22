@@ -40,23 +40,29 @@ class ApiWrapper:
 
 async def main():
     hashtags = [
-        'canadaelection', '51ststate', 'canadapoli', 'canadianpolitics', 'cdnpoli', 'markcarney', 'pierrepoilievre', 'poilievre', 'jagmeetsingh', 'carney', 'elbowsup'
+        'canadaelection', '51ststate', 'canadapoli', 'canadianpolitics', 'cdnpoli',\
+        'markcarney', 'pierrepoilievre', 'poilievre', 'jagmeetsingh', 'carney', 'elbowsup',\
+        'canadanews', 'cdnpolitics', 'neverpoilievre', 'canadianresisters', 'canadianelection'
     ]
-    hashtags.reverse()
+    # hashtags.reverse()
 
     async with ApiWrapper('pytok') as api:
         for hashtag_name in tqdm(hashtags):
-            videos = await api.get_hashtag_videos(hashtag_name)
+            try:
+                videos = await api.get_hashtag_videos(hashtag_name)
 
-            df = pl.DataFrame(videos)
-            df = df.with_columns(pl.lit(datetime.datetime.today()).alias('scrape_date'))
-            file_path = f'./data/hashtag_{hashtag_name}.parquet.zstd'
-            print(f'Saving {len(df)} new videos to {file_path}')
-            if os.path.exists(file_path):
-                existing_df = pl.read_parquet(file_path)
-                df = concat(existing_df, df)
-            df = df.unique('id')
-            df.write_parquet(file_path, compression='zstd')
+                df = pl.DataFrame(videos)
+                df = df.with_columns(pl.lit(datetime.datetime.today()).alias('scrape_date'))
+                file_path = f'./data/hashtag_{hashtag_name}.parquet.zstd'
+                print(f'Saving {len(df)} new videos to {file_path}')
+                if os.path.exists(file_path):
+                    existing_df = pl.read_parquet(file_path)
+                    df = concat(existing_df, df)
+                df = df.unique('id')
+                df.write_parquet(file_path, compression='zstd')
+            except Exception as e:
+                print(f"Error fetching videos for hashtag {hashtag_name}: {e}")
+                continue
 
 if __name__ == "__main__":
     asyncio.run(main())
