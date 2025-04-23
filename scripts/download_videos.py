@@ -145,41 +145,6 @@ async def pytok_bytes(api, videos, logger, headless, request_delay):
             logger.error(f"Error getting video bytes for {video_data['id']}: {ex}")
             continue
 
-        # try:
-        #     video_id = video_data['id']
-        #     url = f"https://www.tiktok.com/@{video_data['author']['uniqueId']}/video/{video_id}"
-        #     headers = get_headers()
-            
-        #     info_res = requests.get(url, headers=headers)
-        #     video_processor = ProcessVideo(info_res)
-        #     text_chunk = info_res.text
-        #     if len(text_chunk) == 0:
-        #         continue
-        #     do = video_processor.process_chunk(text_chunk)
-
-        #     bytes_headers = {
-        #         'sec-ch-ua': '"HeadlessChrome";v="123", "Not:A-Brand";v="8", "Chromium";v="123"', 
-        #         'referer': 'https://www.tiktok.com/', 
-        #         'accept-encoding': 'identity;q=1, *;q=0', 
-        #         'sec-ch-ua-mobile': '?0', 
-        #         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.6312.4 Safari/537.36', 
-        #         'range': 'bytes=0-', 
-        #         'sec-ch-ua-platform': '"Windows"'
-        #     }
-
-        #     video_d = video_processor.process_response()
-
-        #     if 'video' not in video_d:
-        #         continue
-
-        #     cookies = {c.name: c.value for c in info_res.cookies}
-        #     download_url = video_d['video']['downloadAddr'] if video_d['video']['downloadAddr'] else video_d['video']['playAddr']
-        #     bytes_res = requests.get(download_url, headers=bytes_headers, cookies=cookies)
-        #     if 200 <= bytes_res.status_code < 300:
-        #         video_bytes[video_data['id']] = bytes_res.content
-        # except Exception as ex:
-        #     continue
-
     return video_bytes
 
 class VideoBytesScraper:
@@ -231,12 +196,24 @@ async def get_tiktok_video_bytes():
     saved_video_df = saved_video_df.select(pl.col('filename').str.split('.').list.get(0).alias('id'))
 
     logger.info("Getting video df")
-    video_path = f'./data/dubois_videos_backup.parquet.zstd'
-    video_df = pl.read_parquet(video_path)
+    try:
+        dubois_df = pl.read_parquet('./data/dubois_videos.parquet.zstd')
+    except:
+        dubois_df = pl.read_parquet('./data/dubois_videos_backup.parquet.zstd')
+
+    try:
+        dark_df = pl.read_parquet('./data/dark_videos.parquet.zstd')
+    except:
+        dark_df = pl.read_parquet('./data/dark_videos_backup.parquet.zstd')
+
+    video_df = pl.concat([dubois_df, dark_df], how='diagonal_relaxed')
 
     video_df = video_df.join(saved_video_df, on='id', how='anti')
     video_df = video_df.filter(pl.col('video').struct.field('duration') > 0)
     # scrape video bytes
+
+    # TODO to remove
+    video_df = video_df.filter(pl.col('author').struct.field('uniqueId').is_in(['greenneighbour', 'thisthatandmoreeeee', 'couplecasualspodcast']))
 
     batch_size = 20
 

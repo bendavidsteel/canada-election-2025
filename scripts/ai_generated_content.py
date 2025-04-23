@@ -36,7 +36,7 @@ def main():
                 pl.col('id').filter(pl.col('aigcLabelType') == '2').len().alias('tiktok_tagged_ai'),
                 pl.col('id').filter(pl.col('aigcLabelType') == '1').len().alias('user_tagged_ai')
              ])
-    ai_df = ai_df.head(len(ai_df) - 1)
+    # ai_df = ai_df.head(len(ai_df) - 1)
     
     # Calculate percentages
     ai_df = ai_df.with_columns([
